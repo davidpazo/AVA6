@@ -5,22 +5,16 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.Toolbar;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -109,9 +103,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
             if (palabras[0].equals(magicWord)|| validado){
                 validado=true;
 
-
                 intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10);
-
 
                 if (decodificador(palabras, new String[] {"hora","es"})){
                     textToSpeech.speak(Methods.time(), 1, null, null);

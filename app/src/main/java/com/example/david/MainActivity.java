@@ -104,6 +104,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 validado=true;
 
                 intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10);
+                intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS,2000);
 
                 if (decodificador(palabras, new String[] {"hora","es"})){
                     textToSpeech.speak(Methods.time(), 1, null, null);

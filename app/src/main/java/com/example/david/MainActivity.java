@@ -2,10 +2,14 @@ package com.example.david;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.ActivityCompat;
@@ -20,7 +24,18 @@ import java.util.Locale;
 
 public class MainActivity extends Activity implements TextToSpeech.OnInitListener {
 
-    private static final int VOICE_RECOGNITION_REQUEST_CODE = 1;
+    private ServiceConnection sc= new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            sc= (ServiceConnection) service;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            sc = null;
+        }
+    };
+    Intent imicro = new Intent(this, Micro.class);
     private TextToSpeech textToSpeech;
     private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 1;
     private static final int MY_PERMISSIONS_REQUEST_WRITE_CONTACTS = 2;
@@ -57,15 +72,14 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setActionBar(toolbar);
 
-        textToSpeech = new TextToSpeech(this, this);
-        textToSpeech.setLanguage(new Locale("spa", "ESP"));
 
-        thread = new Thread() {
-            public void run() {
-                micro();
-            }
-        };
-        thread.start();
+        bindService(imicro, sc, Context.BIND_AUTO_CREATE);
+
+    }
+
+    @Override
+    public void onInit(int status) {
+
     }
 
     /**
@@ -74,7 +88,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
      * empieza la startActivityForRest donde se trata el text y se determina que accion quiere
      * realizar el usuario
      */
-    public synchronized void micro() {
+    /**public synchronized void micro() {
         intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         // Indicamos el modelo de lenguaje para el intent
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
@@ -83,6 +97,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "¿Qué es lo que quieres hacer?");
         // Lanzamos la actividad esperando resultados
         intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+        //intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,"es-ES");
         startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
     }
 
@@ -92,12 +107,12 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
      *
      * @param requestCode codigo de la peticion
      */
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent dat) {
+   /** @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         if (requestCode == VOICE_RECOGNITION_REQUEST_CODE && resultCode == RESULT_OK) {
 
-            ArrayList<String> matches = dat.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+            ArrayList<String> matches = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             String[] palabras = matches.get(0).split(" ");
 
             if (palabras[0].equals(magicWord)|| validado){
@@ -106,7 +121,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 10);
                 intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS,2000);
 
-                if (decodificador(palabras, new String[] {"hora","es"})){
+                if (decodificador(palabras, new String[] {"hora"})){
                     textToSpeech.speak(Methods.time(), 1, null, null);
                     action_llamar(palabras);
                 }//if ((palabras[0].equals("contar") && palabras[1].equals("chiste")) || (palabras[0].equals("cuéntame") && palabras[2].equals("chiste"))) {
@@ -128,19 +143,20 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         }
 
     public boolean decodificador(String[]palabra,String [] pclave){
-        boolean y=false;
+        int y = 0;
+
         for(int i = 0; i<palabra.length; i++){
             String aux = palabra[0];
 
             for(int j=0; j<pclave.length; j++){
                 if(aux.equalsIgnoreCase(pclave[j]))
-                    y=true;
-                else
-                    y=false;
+                    y++;
             }
-
         }
-        return y;
+        if(y == pclave.length)
+            return true;
+        else
+            return false;
     }
     /**
      * Metodo action_llamar() que realiza todas las operaciones necesarias para realizar
@@ -148,7 +164,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
      *
      * @param palabras arraylist con todas las palabras reconocidas por la api de google
      */
-    private void action_llamar(String[] palabras) {
+   /** private void action_llamar(String[] palabras) {
 
         if(palabras.length > 3) {
             for(int i = 3; i<palabras.length; i++){
@@ -196,9 +212,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
 
             Toast.makeText(this, "ERROR LANG_MISSING_DATA | LANG_NOT_SUPPORTED", Toast.LENGTH_SHORT)
                     .show();
-
         }
-
     }
 
     @Override
@@ -222,7 +236,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
         }
 
         return super.onOptionsItemSelected(item);
-    }
+    }*/
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {

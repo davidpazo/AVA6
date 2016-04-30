@@ -23,7 +23,7 @@ import java.lang.ref.WeakReference;
  * Created by david.pazo on 29/4/16.
  */
 public class Prueba extends Service {
-    
+
     protected AudioManager mAudioManager;
     protected SpeechRecognizer mSpeechRecognizer;
     protected Intent mSpeechRecognizerIntent;
@@ -36,8 +36,7 @@ public class Prueba extends Service {
     static final int MSG_RECOGNIZER_CANCEL = 2;
 
     @Override
-    public void onCreate()
-    {
+    public void onCreate() {
         super.onCreate();
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
@@ -49,32 +48,26 @@ public class Prueba extends Service {
                 this.getPackageName());
     }
 
-    protected static class IncomingHandler extends Handler
-    {
+    protected static class IncomingHandler extends Handler {
         private WeakReference<Prueba> mtarget;
 
-        IncomingHandler(Prueba target)
-        {
+        IncomingHandler(Prueba target) {
             mtarget = new WeakReference<Prueba>(target);
         }
 
 
         @Override
-        public void handleMessage(Message msg)
-        {
+        public void handleMessage(Message msg) {
             final Prueba target = mtarget.get();
 
-            switch (msg.what)
-            {
+            switch (msg.what) {
                 case MSG_RECOGNIZER_START_LISTENING:
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
-                    {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                         // turn off beep sound  
                         target.mAudioManager.setStreamMute(AudioManager.STREAM_SYSTEM, true);
                     }
-                    if (!target.mIsListening)
-                    {
+                    if (!target.mIsListening) {
                         target.mSpeechRecognizer.startListening(target.mSpeechRecognizerIntent);
                         target.mIsListening = true;
                         //Log.d(TAG, "message start listening"); //$NON-NLS-1$
@@ -91,45 +84,36 @@ public class Prueba extends Service {
     }
 
     // Count down timer for Jelly Bean work around
-    protected CountDownTimer mNoSpeechCountDown = new CountDownTimer(5000, 5000)
-    {
+    protected CountDownTimer mNoSpeechCountDown = new CountDownTimer(5000, 5000) {
 
         @Override
-        public void onTick(long millisUntilFinished)
-        {
+        public void onTick(long millisUntilFinished) {
             // TODO Auto-generated method stub
 
         }
 
         @Override
-        public void onFinish()
-        {
+        public void onFinish() {
             mIsCountDownOn = false;
             Message message = Message.obtain(null, MSG_RECOGNIZER_CANCEL);
-            try
-            {
+            try {
                 mServerMessenger.send(message);
                 message = Message.obtain(null, MSG_RECOGNIZER_START_LISTENING);
                 mServerMessenger.send(message);
-            }
-            catch (RemoteException e)
-            {
+            } catch (RemoteException e) {
 
             }
         }
     };
 
     @Override
-    public void onDestroy()
-    {
+    public void onDestroy() {
         super.onDestroy();
 
-        if (mIsCountDownOn)
-        {
+        if (mIsCountDownOn) {
             mNoSpeechCountDown.cancel();
         }
-        if (mSpeechRecognizer != null)
-        {
+        if (mSpeechRecognizer != null) {
             mSpeechRecognizer.destroy();
         }
     }
@@ -139,11 +123,9 @@ public class Prueba extends Service {
         private static final String TAG = "SpeechRecognitionListen";
 
         @Override
-        public void onBeginningOfSpeech()
-        {
+        public void onBeginningOfSpeech() {
             // speech input will be processed, so there is no need for count down anymore
-            if (mIsCountDownOn)
-            {
+            if (mIsCountDownOn) {
                 mIsCountDownOn = false;
                 mNoSpeechCountDown.cancel();
             }
@@ -151,55 +133,44 @@ public class Prueba extends Service {
         }
 
         @Override
-        public void onBufferReceived(byte[] buffer)
-        {
+        public void onBufferReceived(byte[] buffer) {
 
         }
 
         @Override
-        public void onEndOfSpeech()
-        {
+        public void onEndOfSpeech() {
             //Log.d(TAG, "onEndOfSpeech"); //$NON-NLS-1$
         }
 
         @Override
-        public void onError(int error)
-        {
-            if (mIsCountDownOn)
-            {
+        public void onError(int error) {
+            if (mIsCountDownOn) {
                 mIsCountDownOn = false;
                 mNoSpeechCountDown.cancel();
             }
             mIsListening = false;
             Message message = Message.obtain(null, MSG_RECOGNIZER_START_LISTENING);
-            try
-            {
+            try {
                 mServerMessenger.send(message);
-            }
-            catch (RemoteException e)
-            {
+            } catch (RemoteException e) {
 
             }
             //Log.d(TAG, "error = " + error); //$NON-NLS-1$
         }
 
         @Override
-        public void onEvent(int eventType, Bundle params)
-        {
+        public void onEvent(int eventType, Bundle params) {
 
         }
 
         @Override
-        public void onPartialResults(Bundle partialResults)
-        {
+        public void onPartialResults(Bundle partialResults) {
 
         }
 
         @Override
-        public void onReadyForSpeech(Bundle params)
-        {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
-            {
+        public void onReadyForSpeech(Bundle params) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 mIsCountDownOn = true;
                 mNoSpeechCountDown.start();
                 mAudioManager.setStreamMute(AudioManager.STREAM_SYSTEM, false);
@@ -208,15 +179,13 @@ public class Prueba extends Service {
         }
 
         @Override
-        public void onResults(Bundle results)
-        {
+        public void onResults(Bundle results) {
             //Log.d(TAG, "onResults"); //$NON-NLS-1$
 
         }
 
         @Override
-        public void onRmsChanged(float rmsdB)
-        {
+        public void onRmsChanged(float rmsdB) {
 
         }
 

@@ -1,18 +1,74 @@
 package com.example.david;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.speech.tts.TextToSpeech;
+import android.support.v4.app.ActivityCompat;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Random;
 
 /**
  * Clase para añadir metodos estaticos
  */
-public class Methods {
+public class Methods extends Activity implements TextToSpeech.OnInitListener {
+    TextToSpeech textToSpeech;
+    @Override
+    protected void onCreate(Bundle savedInstanceState){
+        super.onCreate(savedInstanceState);
+        textToSpeech = new TextToSpeech(this, this);
+        textToSpeech.setLanguage(new Locale("spa", "ESP"));
+    }
+
+    public  void action_llamar(String[] palabras) {
+
+        if(palabras.length > 3) {
+            for(int i = 3; i<palabras.length; i++){
+                palabras[2] += " " + palabras[i];
+            }
+        }
+
+        String number = findNumber(this.getApplicationContext(), palabras[2]);
+
+        if (!number.equals("error")) {
+
+            Intent callIntent = new Intent(Intent.ACTION_CALL);
+            callIntent.setData(Uri.parse("tel:" + number));
+
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE)
+                    == PackageManager.PERMISSION_GRANTED) {
+
+                // se deberia introducir un mecanismo de control
+                //  dejo la estructura hecha
+                if ( "" == "" ) {
+                    startActivity(callIntent);
+                } else {
+
+                }
+
+            } else {
+
+                textToSpeech.speak("No he podido llamar a: " + palabras[2] +
+                                " porque no me has dado los permisos para poder usar el telefono",
+                        1, null, null);
+
+            }
+        } else {
+
+            textToSpeech.speak("No encontré a: " + palabras[2] + " entre tus contactos",
+                    1, null, null);
+
+        }
+    }
 
     /**
      * Metodo para buscar el numero de telefono de un contacto dado
@@ -21,7 +77,7 @@ public class Methods {
      * @param persona string con la persona a buscar
      * @return un string con el numero encontrado, o un string con error
      */
-    public static String findNumber(Context context, String persona) {
+    public String findNumber(Context context, String persona) {
 
         Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
 
@@ -52,7 +108,7 @@ public class Methods {
      *
      * @return retorna un chiste aleatorio
      */
-    public static String tell_a_joke() {
+    public String tell_a_joke() {
 
         String [] jokes = {
                 "van dos en una moto, y se cae el del medio",
@@ -71,13 +127,18 @@ public class Methods {
      *
      * @return string con la hora
      */
-    public static String time() {
+    public String time() {
 
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(System.currentTimeMillis());
         Date date = cal.getTime();
 
         return "Son las: " + date.getHours() + " " + date.getMinutes();
+
+    }
+
+    @Override
+    public void onInit(int status) {
 
     }
 }
